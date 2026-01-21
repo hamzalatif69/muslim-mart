@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#16a34a">
+    <meta name="description" content="Muslim Mart - Profit & Loss Reports">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect fill='%2316a34a' width='192' height='192'/%3E%3Ctext x='50%' y='50%' font-size='60' fill='%23ffffff' text-anchor='middle' dy='.3em'%3E🛍️%3C/text%3E%3C/svg%3E">
+    <title>Profit & Loss Reports - Muslim Mart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/pwa.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation Bar -->
+    <nav class="bg-gradient-to-r from-green-600 to-blue-600 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-2">
+                    <h1 class="text-2xl font-bold">🛍️ MUSLIM MART</h1>
+                </div>
+                <button onclick="logout()" class="bg-white text-green-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition">
+                    Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar Navigation -->
+    <div class="flex h-screen bg-gray-50" style="margin-top: -4rem; padding-top: 4rem;">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-gray-900 text-white">
+            <div class="p-6">
+                <nav class="space-y-2">
+                    <a href="index.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-800 font-semibold transition">
+                        <span class="text-xl">📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="products.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-800 font-semibold transition">
+                        <span class="text-xl">📦</span>
+                        <span>Products</span>
+                    </a>
+                    <a href="sales.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-800 font-semibold transition">
+                        <span class="text-xl">💳</span>
+                        <span>Sales / POS</span>
+                    </a>
+                    <a href="reports.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-gradient-to-r from-green-500 to-blue-500 font-semibold hover:opacity-90 transition">
+                        <span class="text-xl">📈</span>
+                        <span>Profit & Loss</span>
+                    </a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-auto">
+            <div class="max-w-7xl mx-auto p-8">
+                <!-- Page Header -->
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">Profit & Loss Reports</h2>
+                <p class="text-gray-600 mb-6">Track your business profitability</p>
+
+                <!-- Filter Section -->
+                <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+                    <div class="flex flex-col md:flex-row gap-4 items-end">
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">Report Type</label>
+                            <select id="reportType" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none">
+                                <option value="overall">Overall Report</option>
+                                <option value="daily">Daily Report</option>
+                                <option value="monthly">Monthly Report</option>
+                            </select>
+                        </div>
+
+                        <div id="dateFilter" style="display: none;">
+                            <label class="block text-gray-700 font-semibold mb-2">Select Date</label>
+                            <input type="date" id="selectedDate" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none">
+                        </div>
+
+                        <div id="monthFilter" style="display: none;">
+                            <label class="block text-gray-700 font-semibold mb-2">Select Month</label>
+                            <input type="month" id="selectedMonth" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none">
+                        </div>
+
+                        <button onclick="loadReport()" class="bg-gradient-to-r from-green-600 to-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:opacity-90 transition">
+                            Generate Report
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+                        <p class="text-gray-600 text-sm font-semibold">Total Profit</p>
+                        <p class="text-3xl font-bold text-green-600 mt-2" id="totalProfit">Rs. 0</p>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
+                        <p class="text-gray-600 text-sm font-semibold">Total Loss</p>
+                        <p class="text-3xl font-bold text-red-600 mt-2" id="totalLoss">Rs. 0</p>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+                        <p class="text-gray-600 text-sm font-semibold">Net Profit/Loss</p>
+                        <p class="text-3xl font-bold text-blue-600 mt-2" id="netProfit">Rs. 0</p>
+                    </div>
+                </div>
+
+                <!-- Detailed Report Table -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="p-6 border-b-2 border-gray-200">
+                        <h3 class="text-xl font-bold text-gray-900" id="reportTitle">Item-wise Profit & Loss Report</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-left text-sm">
+                            <thead class="bg-gray-100 border-b-2 border-gray-300">
+                                <tr>
+                                    <th class="px-6 py-4 font-semibold text-gray-700">Product Name</th>
+                                    <th class="px-6 py-4 font-semibold text-gray-700 text-center">Quantity Sold</th>
+                                    <th class="px-6 py-4 font-semibold text-gray-700 text-right">Buy Price</th>
+                                    <th class="px-6 py-4 font-semibold text-gray-700 text-right">Sell Price</th>
+                                    <th class="px-6 py-4 font-semibold text-gray-700 text-right">Total Cost</th>
+                                    <th class="px-6 py-4 font-semibold text-gray-700 text-right">Total Revenue</th>
+                                    <th class="px-6 py-4 font-semibold text-gray-700 text-right">Profit/Loss</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportTable" class="divide-y">
+                                <tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">Select a report type and click Generate</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Summary Statistics -->
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Total Sales Count -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Transaction Summary</h3>
+                        <p class="text-gray-700 text-lg">
+                            Total Sales: <span class="font-bold text-green-600" id="totalSales">0</span>
+                        </p>
+                    </div>
+
+                    <!-- Summary Details -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Additional Details</h3>
+                        <div class="space-y-2 text-sm text-gray-700">
+                            <p>Total Discount Given: <span class="font-semibold" id="totalDiscount">Rs. 0</span></p>
+                            <p>Total Tax Collected: <span class="font-semibold" id="totalTax">Rs. 0</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const authManager = new AuthManager();
+        let currentReportData = null;
+
+        // Handle report type change
+        document.getElementById('reportType').addEventListener('change', function() {
+            document.getElementById('dateFilter').style.display = this.value === 'daily' ? 'block' : 'none';
+            document.getElementById('monthFilter').style.display = this.value === 'monthly' ? 'block' : 'none';
+        });
+
+        // Set default dates
+        function setDefaultDates() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('selectedDate').value = today;
+
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            document.getElementById('selectedMonth').value = `${year}-${month}`;
+        }
+
+        // Load report
+        function loadReport() {
+            const reportType = document.getElementById('reportType').value;
+            let report;
+
+            if (reportType === 'daily') {
+                const dateStr = document.getElementById('selectedDate').value;
+                const date = new Date(dateStr);
+                report = dataManager.getProfitLossReport(date);
+            } else if (reportType === 'monthly') {
+                const monthStr = document.getElementById('selectedMonth').value;
+                const [year, month] = monthStr.split('-');
+                report = dataManager.getMonthlySummary(parseInt(year), parseInt(month) - 1);
+            } else {
+                report = dataManager.getProfitLossReport();
+            }
+
+            currentReportData = report;
+            displayReport(report, reportType);
+        }
+
+        // Display report
+        function displayReport(report, reportType) {
+            document.getElementById('totalProfit').textContent = `Rs. ${report.totalProfit.toLocaleString()}`;
+            document.getElementById('totalLoss').textContent = `Rs. ${report.totalLoss.toLocaleString()}`;
+            document.getElementById('netProfit').textContent = `Rs. ${report.netProfit.toLocaleString()}`;
+            document.getElementById('totalSales').textContent = report.totalSales;
+
+            if (reportType === 'overall' || reportType === 'daily') {
+                displayItemWiseReport(report.itemWiseReport);
+            } else {
+                document.getElementById('reportTable').innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">Monthly report shows summary only</td></tr>';
+            }
+
+            // Calculate and display additional details
+            let totalDiscount = 0;
+            let totalTax = 0;
+
+            if (report.itemWiseReport) {
+                report.itemWiseReport.forEach(item => {
+                    totalDiscount += item.discount * item.quantity || 0;
+                    totalTax += item.tax || 0;
+                });
+            }
+
+            document.getElementById('totalDiscount').textContent = `Rs. ${totalDiscount.toLocaleString()}`;
+            document.getElementById('totalTax').textContent = `Rs. ${totalTax.toLocaleString()}`;
+        }
+
+        // Display item-wise report
+        function displayItemWiseReport(items) {
+            const tableBody = document.getElementById('reportTable');
+            tableBody.innerHTML = '';
+
+            if (!items || items.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">No sales data for this period</td></tr>';
+                return;
+            }
+
+            items.forEach(item => {
+                const row = document.createElement('tr');
+                const profitLossClass = item.profitLoss >= 0 ? 'text-green-600' : 'text-red-600';
+                row.innerHTML = `
+                    <td class="px-6 py-4 font-semibold text-gray-900">${item.productName}</td>
+                    <td class="px-6 py-4 text-center text-gray-700">${item.quantity}</td>
+                    <td class="px-6 py-4 text-right text-gray-700">Rs. ${item.buyPrice.toLocaleString()}</td>
+                    <td class="px-6 py-4 text-right text-gray-700">Rs. ${item.sellPrice.toLocaleString()}</td>
+                    <td class="px-6 py-4 text-right text-gray-700">Rs. ${item.totalCost.toLocaleString()}</td>
+                    <td class="px-6 py-4 text-right text-gray-700">Rs. ${item.totalRevenue.toLocaleString()}</td>
+                    <td class="px-6 py-4 text-right font-semibold ${profitLossClass}">Rs. ${item.profitLoss.toLocaleString()}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Logout
+        function logout() {
+            authManager.logout();
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            setDefaultDates();
+            loadReport();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You're Offline - Muslim Mart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-orange-50 to-red-50 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full">
+        <div class="bg-white rounded-lg shadow-2xl p-8 text-center">
+            <div class="text-6xl mb-6">📵</div>
+            
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Offline</h1>
+            <p class="text-gray-600 mb-6">
+                It looks like you've lost your internet connection. Don't worry, you can still access cached pages and your data will sync when you're back online.
+            </p>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-left">
+                <h3 class="font-semibold text-blue-900 mb-2">What you can do:</h3>
+                <ul class="text-sm text-blue-800 space-y-1">
+                    <li>✓ View previously loaded pages</li>
+                    <li>✓ Create offline transactions (synced later)</li>
+                    <li>✓ Manage products and inventory</li>
+                    <li>✓ View cached reports</li>
+                </ul>
+            </div>
+
+            <div class="space-y-3">
+                <a href="/" class="block bg-gradient-to-r from-green-600 to-blue-600 text-white font-bold py-3 rounded-lg hover:opacity-90 transition">
+                    Go to Dashboard
+                </a>
+                
+                <button onclick="checkConnection()" class="w-full bg-gray-200 text-gray-900 font-semibold py-3 rounded-lg hover:bg-gray-300 transition">
+                    Check Connection
+                </button>
+            </div>
+
+            <p class="text-xs text-gray-500 mt-6">
+                Muslim Mart is running in offline mode. All changes will be synchronized once your connection is restored.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function checkConnection() {
+            fetch('/manifest.json', { method: 'HEAD' })
+                .then(() => {
+                    document.body.innerHTML = `
+                        <div class="max-w-md w-full">
+                            <div class="bg-white rounded-lg shadow-2xl p-8 text-center">
+                                <div class="text-6xl mb-6 animate-bounce">✓</div>
+                                <h1 class="text-3xl font-bold text-green-600 mb-2">Connected!</h1>
+                                <p class="text-gray-600 mb-6">Your connection has been restored.</p>
+                                <a href="/" class="inline-block bg-gradient-to-r from-green-600 to-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:opacity-90 transition">
+                                    Continue to Dashboard
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                })
+                .catch(() => {
+                    alert('Still offline. Please check your internet connection.');
+                });
+        }
+
+        // Auto-check every 5 seconds
+        setInterval(checkConnection, 5000);
+    </script>
+</body>
+</html>

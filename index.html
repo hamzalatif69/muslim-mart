@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#16a34a">
+    <meta name="description" content="Muslim Mart - Complete Mart Management System">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect fill='%2316a34a' width='192' height='192'/%3E%3Ctext x='50%' y='50%' font-size='60' fill='%23ffffff' text-anchor='middle' dy='.3em'%3E🛍️%3C/text%3E%3C/svg%3E">
+    <title>Dashboard - Muslim Mart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/pwa.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation Bar -->
+    <nav class="bg-gradient-to-r from-green-600 to-blue-600 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-2">
+                    <h1 class="text-2xl font-bold">🛍️ MUSLIM MART</h1>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <span id="shopName" class="text-sm font-semibold"></span>
+                    <span id="userName" class="text-sm"></span>
+                    <button onclick="logout()" class="bg-white text-green-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar Navigation -->
+    <div class="flex h-screen bg-gray-50" style="margin-top: -4rem; padding-top: 4rem;">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-gray-900 text-white">
+            <div class="p-6">
+                <nav class="space-y-2">
+                    <a href="index.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-gradient-to-r from-green-500 to-blue-500 font-semibold hover:opacity-90 transition">
+                        <span class="text-xl">📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="products.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-800 font-semibold transition">
+                        <span class="text-xl">📦</span>
+                        <span>Products</span>
+                    </a>
+                    <a href="sales.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-800 font-semibold transition">
+                        <span class="text-xl">💳</span>
+                        <span>Sales / POS</span>
+                    </a>
+                    <a href="reports.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-800 font-semibold transition">
+                        <span class="text-xl">📈</span>
+                        <span>Profit & Loss</span>
+                    </a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-auto">
+            <div class="max-w-7xl mx-auto p-8">
+                <!-- Page Header -->
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900">Dashboard</h2>
+                    <p class="text-gray-600 mt-2">Welcome to Muslim Mart Management System</p>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- Total Products Available -->
+                    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-600 text-sm font-semibold">Total Products Available</p>
+                                <p class="text-3xl font-bold text-blue-600 mt-2" id="totalProducts">0</p>
+                            </div>
+                            <span class="text-4xl text-blue-200">📦</span>
+                        </div>
+                    </div>
+
+                    <!-- Total Products Sold -->
+                    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-600 text-sm font-semibold">Total Products Sold</p>
+                                <p class="text-3xl font-bold text-green-600 mt-2" id="totalSold">0</p>
+                            </div>
+                            <span class="text-4xl text-green-200">✅</span>
+                        </div>
+                    </div>
+
+                    <!-- Total Sales Amount -->
+                    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-600 text-sm font-semibold">Total Sales Amount</p>
+                                <p class="text-3xl font-bold text-yellow-600 mt-2" id="totalSales">Rs. 0</p>
+                            </div>
+                            <span class="text-4xl text-yellow-200">💰</span>
+                        </div>
+                    </div>
+
+                    <!-- Total Profit -->
+                    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-600 text-sm font-semibold">Total Profit</p>
+                                <p class="text-3xl font-bold text-purple-600 mt-2" id="totalProfit">Rs. 0</p>
+                            </div>
+                            <span class="text-4xl text-purple-200">📈</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Second Row Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <!-- Total Loss -->
+                    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-600 text-sm font-semibold">Total Loss</p>
+                                <p class="text-3xl font-bold text-red-600 mt-2" id="totalLoss">Rs. 0</p>
+                            </div>
+                            <span class="text-4xl text-red-200">📉</span>
+                        </div>
+                    </div>
+
+                    <!-- Net Profit/Loss -->
+                    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-indigo-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-600 text-sm font-semibold">Net Profit/Loss</p>
+                                <p class="text-3xl font-bold text-indigo-600 mt-2" id="netProfit">Rs. 0</p>
+                            </div>
+                            <span class="text-4xl text-indigo-200">💹</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category-wise Summary -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Category-wise Summary</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-left">
+                            <thead class="bg-gray-100 border-b-2 border-gray-300">
+                                <tr>
+                                    <th class="px-4 py-3 font-semibold text-gray-700">Category</th>
+                                    <th class="px-4 py-3 font-semibold text-gray-700 text-center">Products</th>
+                                    <th class="px-4 py-3 font-semibold text-gray-700 text-right">Total Stock</th>
+                                    <th class="px-4 py-3 font-semibold text-gray-700 text-right">Total Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categoryTable" class="divide-y">
+                                <tr><td colspan="4" class="px-4 py-3 text-center text-gray-500">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Low Stock Alert -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center space-x-2">
+                        <span>⚠️</span>
+                        <span>Low Stock Alert</span>
+                    </h3>
+                    <div id="lowStockList" class="space-y-2">
+                        <p class="text-gray-600">No low stock items</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const authManager = new AuthManager();
+
+        // Load user info
+        function loadUserInfo() {
+            const user = authManager.getCurrentUser();
+            if (user) {
+                document.getElementById('userName').textContent = `👤 ${user.fullName}`;
+                document.getElementById('shopName').textContent = user.shopName;
+            }
+        }
+
+        // Load dashboard data
+        function loadDashboard() {
+            const stats = dataManager.getDashboardStats();
+
+            document.getElementById('totalProducts').textContent = stats.totalProducts.toLocaleString();
+            document.getElementById('totalSold').textContent = stats.totalSold.toLocaleString();
+            document.getElementById('totalSales').textContent = `Rs. ${stats.totalSales.toLocaleString()}`;
+            document.getElementById('totalProfit').textContent = `Rs. ${stats.totalProfit.toLocaleString()}`;
+            document.getElementById('totalLoss').textContent = `Rs. ${stats.totalLoss.toLocaleString()}`;
+            document.getElementById('netProfit').textContent = `Rs. ${(stats.totalProfit - stats.totalLoss).toLocaleString()}`;
+
+            loadCategoryWiseSummary(stats.categoryWiseSummary);
+            loadLowStockAlert(stats.lowStockProducts);
+        }
+
+        // Load category-wise summary
+        function loadCategoryWiseSummary(categories) {
+            const tableBody = document.getElementById('categoryTable');
+            tableBody.innerHTML = '';
+
+            if (Object.keys(categories).length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4" class="px-4 py-3 text-center text-gray-500">No categories</td></tr>';
+                return;
+            }
+
+            Object.entries(categories).forEach(([category, data]) => {
+                const row = document.createElement('tr');
+                row.classList.add('hover:bg-gray-50');
+                row.innerHTML = `
+                    <td class="px-4 py-3 font-semibold text-gray-900">${category.replace(/_/g, ' ')}</td>
+                    <td class="px-4 py-3 text-center text-gray-700">${data.count}</td>
+                    <td class="px-4 py-3 text-right text-gray-700">${data.quantity}</td>
+                    <td class="px-4 py-3 text-right font-semibold text-green-600">Rs. ${data.totalValue.toLocaleString()}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Load low stock alert
+        function loadLowStockAlert(products) {
+            const list = document.getElementById('lowStockList');
+            list.innerHTML = '';
+
+            if (products.length === 0) {
+                list.innerHTML = '<p class="text-gray-600">✓ All products have sufficient stock</p>';
+                return;
+            }
+
+            products.forEach(product => {
+                const item = document.createElement('div');
+                item.classList.add('bg-red-50', 'border', 'border-red-200', 'rounded-lg', 'p-4', 'flex', 'justify-between', 'items-center');
+                item.innerHTML = `
+                    <div>
+                        <p class="font-semibold text-red-900">${product.name}</p>
+                        <p class="text-sm text-red-700">Current Stock: ${product.quantity} (Min: ${product.minStock})</p>
+                    </div>
+                    <button onclick="goToProducts()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
+                        Restock
+                    </button>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function logout() {
+            authManager.logout();
+        }
+
+        function goToProducts() {
+            window.location.href = 'products.html';
+        }
+
+        window.addEventListener('load', () => {
+            loadUserInfo();
+            loadDashboard();
+        });
+    </script>
+</body>
+</html>
