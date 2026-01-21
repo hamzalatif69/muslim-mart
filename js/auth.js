@@ -37,14 +37,16 @@ class AuthManager {
     }
 }
 
-// Redirect to login if not authenticated (with delay for LocalStorage sync)
+// Redirect to login if not authenticated (fast check)
 function checkAuth() {
-    const authManager = new AuthManager();
-    setTimeout(() => {
-        if (!authManager.isLoggedIn()) {
-            window.location.href = 'auth.html';
+    try {
+        const currentUser = localStorage.getItem('muslimmart_currentUser');
+        if (!currentUser) {
+            window.location.replace('login.html');
         }
-    }, 100);
+    } catch (error) {
+        console.error('Auth check error:', error);
+    }
 }
 
 // Initialize auth check on page load
