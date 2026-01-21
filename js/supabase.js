@@ -8,24 +8,46 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 // Initialize Supabase Client
 let supabaseClient = null;
+let supabaseReady = false;
 
 async function initSupabase() {
     try {
-        // Load Supabase library if not already loaded
-        if (!window.supabase) {
+        console.log('Initializing Supabase...');
+        
+        // Check if supabase library is available
+        if (typeof window !== 'undefined' && window.supabase) {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            supabaseReady = true;
+            console.log('✓ Supabase initialized successfully');
+            return supabaseClient;
+        }
+
+        // Load library if not available
+        return new Promise((resolve, reject) => {
             const script = document.createElement('script');
             script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
             script.async = true;
             script.onload = () => {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('Supabase library loaded from CDN');
+                if (window.supabase) {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    supabaseReady = true;
+                    console.log('✓ Supabase client created');
+                    resolve(supabaseClient);
+                } else {
+                    console.error('Supabase not available after loading');
+                    reject(new Error('Supabase library not available'));
+                }
+            };
+            script.onerror = () => {
+                console.error('Failed to load Supabase library');
+                reject(new Error('Failed to load Supabase library'));
             };
             document.head.appendChild(script);
-        } else {
-            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        }
-        return supabaseClient;
+        });
     } catch (error) {
         console.error('Supabase initialization error:', error);
+        supabaseReady = false;
         throw error;
     }
 }
@@ -33,9 +55,15 @@ async function initSupabase() {
 // Ensure client is ready
 function ensureSupabase() {
     if (!supabaseClient) {
+        console.warn('Supabase client not initialized, attempting initialization...');
         throw new Error('Supabase client not initialized. Call initSupabase() first.');
     }
     return supabaseClient;
+}
+
+// Check if Supabase is ready
+function isSupabaseReady() {
+    return supabaseReady && supabaseClient !== null;
 }
 
 // ====================

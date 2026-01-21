@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Console - Muslim Mart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-4">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">🛍️ Muslim Mart - Debug Console</h1>
+
+        <div class="space-y-4">
+            <!-- Status Box -->
+            <div class="bg-gray-800 rounded-lg p-6">
+                <h2 class="text-xl font-bold mb-4">System Status</h2>
+                <div id="statusInfo" class="space-y-2 text-sm font-mono">
+                    <p>Loading...</p>
+                </div>
+            </div>
+
+            <!-- Service Worker Status -->
+            <div class="bg-gray-800 rounded-lg p-6">
+                <h2 class="text-xl font-bold mb-4">Service Worker</h2>
+                <div class="space-y-2">
+                    <button onclick="checkServiceWorker()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">
+                        Check Status
+                    </button>
+                    <button onclick="unregisterSW()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded">
+                        Unregister All
+                    </button>
+                    <div id="swStatus" class="text-sm font-mono mt-2 bg-gray-900 p-3 rounded">
+                        Status will appear here
+                    </div>
+                </div>
+            </div>
+
+            <!-- Supabase Status -->
+            <div class="bg-gray-800 rounded-lg p-6">
+                <h2 class="text-xl font-bold mb-4">Supabase Connection</h2>
+                <div class="space-y-2">
+                    <button onclick="testSupabase()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">
+                        Test Connection
+                    </button>
+                    <div id="supabaseStatus" class="text-sm font-mono mt-2 bg-gray-900 p-3 rounded">
+                        Connection status will appear here
+                    </div>
+                </div>
+            </div>
+
+            <!-- PWA Install Check -->
+            <div class="bg-gray-800 rounded-lg p-6">
+                <h2 class="text-xl font-bold mb-4">PWA Installation</h2>
+                <div class="space-y-2">
+                    <button onclick="checkPWA()" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded">
+                        Check PWA Status
+                    </button>
+                    <button onclick="clearAllData()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded">
+                        Clear All Storage
+                    </button>
+                    <div id="pwaStatus" class="text-sm font-mono mt-2 bg-gray-900 p-3 rounded">
+                        PWA status will appear here
+                    </div>
+                </div>
+            </div>
+
+            <!-- Console Output -->
+            <div class="bg-gray-800 rounded-lg p-6">
+                <h2 class="text-xl font-bold mb-4">Console Output</h2>
+                <div id="console" class="text-xs font-mono bg-gray-900 p-3 rounded h-64 overflow-y-auto">
+                    <p class="text-gray-500">Console logs will appear here...</p>
+                </div>
+                <button onclick="clearConsole()" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded mt-2">
+                    Clear Console
+                </button>
+            </div>
+
+            <!-- Back Button -->
+            <div class="text-center">
+                <a href="index.html" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded inline-block">
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/supabase.js"></script>
+    <script src="js/pwa.js"></script>
+
+    <script>
+        // Override console.log to show in page
+        const logContainer = document.getElementById('console');
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        function addLog(message, type = 'log') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'text-red-400' : type === 'warn' ? 'text-yellow-400' : 'text-green-400';
+            const line = document.createElement('p');
+            line.className = `${color}`;
+            line.textContent = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+            logContainer.appendChild(line);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalLog(...args);
+            addLog(args.join(' '), 'log');
+        };
+
+        console.error = function(...args) {
+            originalError(...args);
+            addLog(args.join(' '), 'error');
+        };
+
+        console.warn = function(...args) {
+            originalWarn(...args);
+            addLog(args.join(' '), 'warn');
+        };
+
+        // Check system status on load
+        function updateSystemStatus() {
+            const status = `
+Online: ${navigator.onLine ? '✓ Yes' : '✗ No'}
+Service Workers: ${('serviceWorker' in navigator) ? '✓ Supported' : '✗ Not supported'}
+PWA Manager: ${typeof pwaManager !== 'undefined' ? '✓ Initialized' : '✗ Not initialized'}
+Supabase: ${typeof supabaseClient !== 'undefined' ? '✓ Available' : '✗ Not available'}
+LocalStorage: ${typeof Storage !== 'undefined' ? '✓ Available' : '✗ Not available'}
+            `;
+            document.getElementById('statusInfo').innerHTML = `<pre>${status}</pre>`;
+        }
+
+        // Check Service Worker
+        async function checkServiceWorker() {
+            const swStatus = document.getElementById('swStatus');
+            swStatus.innerHTML = 'Checking...';
+
+            if (!('serviceWorker' in navigator)) {
+                swStatus.innerHTML = '<span class="text-red-400">Service Workers not supported</span>';
+                return;
+            }
+
+            try {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                if (registrations.length === 0) {
+                    swStatus.innerHTML = '<span class="text-yellow-400">No Service Workers registered</span>';
+                    return;
+                }
+
+                let html = '<span class="text-green-400">Registered Service Workers:</span>\n';
+                for (const registration of registrations) {
+                    html += `\nScope: ${registration.scope}\n`;
+                    if (registration.active) {
+                        html += `<span class="text-green-400">✓ Active</span>\n`;
+                    }
+                    if (registration.installing) {
+                        html += `<span class="text-yellow-400">⟳ Installing</span>\n`;
+                    }
+                    if (registration.waiting) {
+                        html += `<span class="text-blue-400">⏱ Waiting</span>\n`;
+                    }
+                }
+                swStatus.innerHTML = html;
+            } catch (error) {
+                swStatus.innerHTML = `<span class="text-red-400">Error: ${error.message}</span>`;
+            }
+        }
+
+        // Test Supabase
+        async function testSupabase() {
+            const supabaseStatus = document.getElementById('supabaseStatus');
+            supabaseStatus.innerHTML = 'Testing...';
+
+            try {
+                if (typeof initSupabase === 'undefined') {
+                    supabaseStatus.innerHTML = '<span class="text-red-400">initSupabase not found</span>';
+                    return;
+                }
+
+                await initSupabase();
+
+                if (!isSupabaseReady()) {
+                    supabaseStatus.innerHTML = '<span class="text-yellow-400">Supabase not ready yet</span>';
+                    return;
+                }
+
+                // Try to fetch products
+                const products = await getProducts();
+                supabaseStatus.innerHTML = `<span class="text-green-400">✓ Connected!</span>\n\nProducts fetched: ${products ? products.length : 0}`;
+            } catch (error) {
+                supabaseStatus.innerHTML = `<span class="text-red-400">Error: ${error.message}</span>\n\nUsing localStorage fallback`;
+                console.error('Supabase test error:', error);
+            }
+        }
+
+        // Check PWA
+        async function checkPWA() {
+            const pwaStatus = document.getElementById('pwaStatus');
+            let html = '';
+
+            // Check manifest
+            try {
+                const response = await fetch('/manifest.json');
+                const manifest = await response.json();
+                html += `<span class="text-green-400">✓ Manifest found</span>\nApp: ${manifest.name}\n`;
+            } catch (error) {
+                html += `<span class="text-red-400">✗ Manifest error: ${error.message}</span>\n`;
+            }
+
+            // Check installation
+            if (window.navigator.standalone === true) {
+                html += `<span class="text-green-400">✓ Running as PWA (standalone)</span>\n`;
+            } else if (window.matchMedia('(display-mode: standalone)').matches) {
+                html += `<span class="text-green-400">✓ Running as PWA (display-mode)</span>\n`;
+            } else {
+                html += `<span class="text-yellow-400">⚠ Not installed as PWA</span>\n`;
+            }
+
+            // Check deferredPrompt
+            if (pwaManager && pwaManager.deferredPrompt) {
+                html += `<span class="text-green-400">✓ Install prompt available</span>\n`;
+            } else {
+                html += `<span class="text-yellow-400">⚠ No install prompt</span>\n`;
+            }
+
+            // Check online status
+            html += `\nOnline: ${navigator.onLine ? '<span class="text-green-400">Yes</span>' : '<span class="text-red-400">No</span>'}\n`;
+
+            pwaStatus.innerHTML = html;
+        }
+
+        // Unregister Service Workers
+        async function unregisterSW() {
+            try {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (const registration of registrations) {
+                    await registration.unregister();
+                }
+                console.log('All Service Workers unregistered');
+                checkServiceWorker();
+            } catch (error) {
+                console.error('Error unregistering:', error);
+            }
+        }
+
+        // Clear all storage
+        function clearAllData() {
+            if (confirm('Clear ALL storage? This cannot be undone!')) {
+                localStorage.clear();
+                sessionStorage.clear();
+                console.log('All storage cleared');
+                alert('Storage cleared. Refresh page to reset.');
+            }
+        }
+
+        // Clear console
+        function clearConsole() {
+            logContainer.innerHTML = '<p class="text-gray-500">Console cleared...</p>';
+        }
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            updateSystemStatus();
+            console.log('Debug console loaded');
+        });
+
+        // Update status periodically
+        setInterval(updateSystemStatus, 5000);
+    </script>
+</body>
+</html>
